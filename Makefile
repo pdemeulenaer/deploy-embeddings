@@ -2,6 +2,13 @@
 
 SHELL := $(shell which bash)
 
+# Image name
+IMAGE_NAME := deploy-embeddings
+
+# Read version from version.txt
+VERSION := $(shell cat version.txt)
+
+
 # 0. General local commands
 
 env-file:
@@ -40,10 +47,22 @@ quality: black lint test
 quality-ci: lint test
 
 
+.PHONY: build
+
+build:
+	@echo "Building image version: $(VERSION)"
+	@docker build -t $(IMAGE_NAME):$(VERSION) .
+	@echo "Built image: $(IMAGE_NAME):$(VERSION)"
+
 # to run the fastapi app locally
 serve:
-	poetry run streamlit run src/app_rag_db/app.py	
+	poetry run uvicorn deploy_embeddings.app:app --host 0.0.0.0 --port 8000 --reload
 
 ingest:
 	poetry run python -m src.app_rag_db.ingest_to_qdrant	
 
+health:
+	curl http://localhost:8000/health
+
+test:
+	curl -X POST http://localhost:8000/embed -H "Content-Type: application/json" -d '{"text": "This is a test sentence."}'
