@@ -1,0 +1,43 @@
+[project]
+name = "deploy-embeddings"
+# dynamic = ["version"]
+version = "0.1.0"
+description = "A demo RAG for LangChain and Groq"
+readme-content-type = "text/markdown"
+keywords = [
+    "langchain",
+    "groq",
+    "rag",
+    "retrieval-augmented-generation",
+    "streamlit",
+    "faiss",
+    "huggingface",
+    "pymupdf"
+]
+license = {text = "MIT"}
+# homepage = "
+authors = [
+    {name = "pdemeulenaer",email = "pdemeulenaer@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.11,<4.0"
+dependencies = [
+    "python-dotenv (>=1.0.1,<2.0.0)",
+    "langchain (>=0.3.20,<0.4.0)",
+    "langchain-community (>=0.3.19,<0.4.0)",
+    "langchain-groq (>=0.2.4,<0.3.0)",
+    # "pypdf2 (>=3.0.1,<4.0.0)",
+    "streamlit (>=1.43.2,<2.0.0)",
+    "faiss-cpu (>=1.10.0,<2.0.0)",
+    "huggingface-hub (>=0.30.2,<0.31.0)",
+    "pymupdf (>=1.25.5,<2.0.0)",
+    "qdrant-client (<1.13.3)",    
+]
+
+[tool.poetry]
+packages = [{include = "app_rag_db", from = "src"}]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
