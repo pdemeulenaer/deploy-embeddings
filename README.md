@@ -5,7 +5,7 @@ Here the app is served using `make deploy`
 
 **Docker image**: to create & run it:
 
-* docker build -t rag-app:0.0.1 .
+* make build
 * docker run -p 8501:8501 --env-file .env rag-app:0.0.1
 * docker image tag rag-app:0.0.1 pdemeulenaer/rag-app:0.0.1
 * docker login

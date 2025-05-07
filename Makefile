@@ -47,12 +47,18 @@ quality: black lint test
 quality-ci: lint test
 
 
-.PHONY: build
+.PHONY: build run
 
 build:
 	@echo "Building image version: $(VERSION)"
 	@docker build -t $(IMAGE_NAME):$(VERSION) .
 	@echo "Built image: $(IMAGE_NAME):$(VERSION)"
+
+run:
+	@echo "Running image version: $(VERSION)"
+	@docker run -d -p 8000:8000 --name $(IMAGE_NAME) $(IMAGE_NAME):$(VERSION)
+	@echo "Running image: $(IMAGE_NAME):$(VERSION)"
+	@echo "Access the app at http://localhost:8000"
 
 # to run the fastapi app locally
 serve:

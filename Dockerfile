@@ -1,10 +1,18 @@
 # ===========================
 #  🚀 Stage 1: Builder
 # ===========================
-FROM python:3.11-slim AS builder
+# FROM python:3.11-slim AS builder
+FROM python:3.11-alpine AS builder
 
 # Set working directory
 WORKDIR /app
+
+# Install build dependencies for Poetry and Python packages
+RUN apk add --no-cache \
+    gcc \
+    musl-dev \
+    linux-headers \
+    && pip install --no-cache-dir --upgrade pip
 
 # Install Poetry
 RUN pip install --no-cache-dir poetry==2.1.2
@@ -18,13 +26,16 @@ COPY pyproject.toml poetry.lock* /app/
 #     && rm -rf /root/.cache/pip
 
 # Install dependencies without dev dependencies
-RUN poetry config virtualenvs.create false && \
-poetry install --only main --no-root --no-interaction --no-ansi
+RUN poetry lock --no-cache && \
+    poetry config virtualenvs.create false && \
+    poetry install --only main --no-root --no-interaction --no-ansi --no-cache && \
+    rm -rf /root/.cache
 
 # ===========================
 #  📦 Stage 2: Final Image
 # ===========================
-FROM python:3.11-slim
+# FROM python:3.11-slim
+FROM python:3.11-alpine
 
 # Set working directory
 WORKDIR /app
@@ -36,6 +47,9 @@ COPY --from=builder /usr/local/bin/uvicorn /usr/local/bin/uvicorn
 # # Copy only the installed virtual environment from builder
 # COPY --from=builder /app/.venv /app/.venv
 
+# Pre-download embedding model
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
+
 # # Copy the rest of the application code
 # COPY . .
 # Copy application code
@@ -43,6 +57,9 @@ COPY src/deploy_embeddings/app.py /app/src/deploy_embeddings/
 
 # # Set virtual environment path
 # ENV PATH="/app/.venv/bin:$PATH"
+
+# Set PYTHONPATH to include src directory
+ENV PYTHONPATH=/app/src
 
 # Expose port
 EXPOSE 8000
