@@ -9,3 +9,7 @@ venv/
 .git
 .gitignore
 poetry.toml
+.env
+tests/
+notebooks/
+*.ipynb

@@ -1,62 +1,57 @@
 # ===========================
-#  🚀 Stage 1: Builder
+#  🚧 Stage 1: Builder
 # ===========================
-# FROM python:3.11-slim AS builder
-FROM python:3.11-alpine AS builder
+FROM python:3.11-slim AS builder
+
+# Environment settings
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Set working directory
 WORKDIR /app
 
-# Install build dependencies for Poetry and Python packages
-RUN apk add --no-cache \
-    gcc \
-    musl-dev \
-    linux-headers \
-    && pip install --no-cache-dir --upgrade pip
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Poetry
-RUN pip install --no-cache-dir poetry==2.1.2
+RUN pip install --no-cache-dir poetry==1.8.2
 
-# Copy dependency files first for caching
+# Copy pyproject and lock files
 COPY pyproject.toml poetry.lock* /app/
 
-# # Install dependencies inside a virtual environment
-# RUN poetry config virtualenvs.in-project true \
-#     && poetry install --no-interaction --no-ansi --no-root \
-#     && rm -rf /root/.cache/pip
-
-# Install dependencies without dev dependencies
-RUN poetry lock --no-cache && \
-    poetry config virtualenvs.create false && \
-    poetry install --only main --no-root --no-interaction --no-ansi --no-cache && \
+# Disable venv creation and install main dependencies only
+RUN poetry config virtualenvs.create false && \
+    poetry install --only main --no-root --no-interaction --no-ansi && \
     rm -rf /root/.cache
 
+# Preload model to cache it during build
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
+
 # ===========================
-#  📦 Stage 2: Final Image
+#  📦 Stage 2: Final Runtime
 # ===========================
-# FROM python:3.11-slim
-FROM python:3.11-alpine
+FROM python:3.11-slim
 
 # Set working directory
 WORKDIR /app
 
-# Copy installed dependencies from builder
+# Install runtime system packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libglib2.0-0 \
+    libsm6 \
+    libxrender1 \
+    libxext6 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy installed packages from builder
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin/uvicorn /usr/local/bin/uvicorn
 
-# # Copy only the installed virtual environment from builder
-# COPY --from=builder /app/.venv /app/.venv
-
-# Pre-download embedding model
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
-
-# # Copy the rest of the application code
-# COPY . .
-# Copy application code
+# Copy your app code
 COPY src/deploy_embeddings/app.py /app/src/deploy_embeddings/
-
-# # Set virtual environment path
-# ENV PATH="/app/.venv/bin:$PATH"
 
 # Set PYTHONPATH to include src directory
 ENV PYTHONPATH=/app/src
@@ -64,5 +59,50 @@ ENV PYTHONPATH=/app/src
 # Expose port
 EXPOSE 8000
 
-# Command to run the Streamlit app
+# Run FastAPI app via uvicorn
 CMD ["uvicorn", "deploy_embeddings.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--no-access-log"]
+
+
+
+
+
+# FROM python:3.11-slim
+
+# # Set working directory
+# WORKDIR /app
+
+# # System-level dependencies (build-essential & cleanup)
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#     gcc \
+#     && rm -rf /var/lib/apt/lists/*
+
+# # Install Poetry
+# RUN pip install --no-cache-dir poetry==2.1.2
+
+# # Copy project metadata
+# COPY pyproject.toml poetry.lock* ./
+
+# # Configure Poetry (no venvs, only main deps)
+# RUN poetry config virtualenvs.create false \
+#     && poetry install --only main --no-root --no-interaction --no-ansi \
+#     && rm -rf /root/.cache/pip
+
+# # Install CPU-only PyTorch manually (overrides any version pulled via poetry)
+# RUN pip install --no-cache-dir torch==2.7.0
+
+
+
+# # Pre-download the model to cache it in the image
+# RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
+
+# # Copy application source code
+# COPY src /app/src
+
+# # Set Python path so imports work
+# ENV PYTHONPATH=/app/src
+
+# # Expose FastAPI port
+# EXPOSE 8000
+
+# # Start FastAPI app
+# CMD ["uvicorn", "deploy_embeddings.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--no-access-log"]
