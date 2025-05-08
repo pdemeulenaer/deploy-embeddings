@@ -27,8 +27,8 @@ RUN poetry config virtualenvs.create false && \
     poetry install --only main --no-root --no-interaction --no-ansi && \
     rm -rf /root/.cache
 
-# Preload model to cache it during build
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
+# # Preload model to cache it during build
+# RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
 
 # ===========================
 #  📦 Stage 2: Final Runtime
@@ -40,11 +40,9 @@ WORKDIR /app
 
 # Install runtime system packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libglib2.0-0 \
-    libsm6 \
-    libxrender1 \
-    libxext6 \
-    && rm -rf /var/lib/apt/lists/*
+    libglib2.0-0 libsm6 libxrender1 libxext6 \
+    && apt-get purge -y --auto-remove && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy installed packages from builder
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
