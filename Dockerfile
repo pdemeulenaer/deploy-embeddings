@@ -22,6 +22,10 @@ RUN pip install --no-cache-dir poetry==2.1.2
 # Copy pyproject and lock files
 COPY pyproject.toml poetry.lock* /app/
 
+# Use CPU-only PyTorch wheel index
+RUN poetry config repositories.pytorch-cpu https://download.pytorch.org/whl/cpu
+RUN poetry config installer.parallel false  # optional for deterministic builds
+
 # Disable venv creation and install main dependencies only
 RUN poetry config virtualenvs.create false && \
     poetry install --only main --no-root --no-interaction --no-ansi && \
