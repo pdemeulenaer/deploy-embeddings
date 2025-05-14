@@ -20,8 +20,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip install --no-cache-dir poetry==2.1.2
 
 # Add PyTorch CPU-only index and optimize Poetry config
-RUN poetry config repositories.pytorch-cpu https://download.pytorch.org/whl/cpu && \
-    poetry config installer.parallel false && \
+# RUN poetry config repositories.pytorch-cpu https://download.pytorch.org/whl/cpu && \
+RUN poetry config installer.parallel false && \
     poetry config virtualenvs.create false
 
 # Copy pyproject and lock file
@@ -33,8 +33,8 @@ RUN poetry install --only main --no-root --no-interaction --no-ansi && \
 
 # 🔥 REMOVE unused files to slim the image
 RUN find /usr/local/lib/python3.11/site-packages -type d -name '__pycache__' -exec rm -rf {} + && \
-    find /usr/local/lib/python3.11/site-packages -type d -name 'tests' -exec rm -rf {} + && \
-    find /usr/local/lib/python3.11/site-packages -name '*.dist-info' -exec rm -rf {} +
+    find /usr/local/lib/python3.11/site-packages -type d -name 'tests' -exec rm -rf {} +
+    # find /usr/local/lib/python3.11/site-packages -name '*.dist-info' -exec rm -rf {} +
 
 # # Preload model to cache it during build
 # RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
@@ -58,7 +58,9 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin/uvicorn /usr/local/bin/uvicorn
 
 # Copy your app code
-COPY src/deploy_embeddings/app.py /app/src/deploy_embeddings/
+# COPY src/deploy_embeddings/app.py /app/src/deploy_embeddings/
+COPY src /app/src
+
 
 # Set PYTHONPATH to include src directory
 ENV PYTHONPATH=/app/src
