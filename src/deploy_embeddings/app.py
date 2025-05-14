@@ -5,7 +5,8 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
-MODEL_NAME = "sentence-transformers/paraphrase-MiniLM-L3-v2"
+# MODEL_NAME = "sentence-transformers/paraphrase-MiniLM-L3-v2" # lighter, less general
+MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
 # Load model
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
