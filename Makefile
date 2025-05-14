@@ -8,6 +8,8 @@ IMAGE_NAME := deploy-embeddings
 # Read version from version.txt
 VERSION := $(shell cat version.txt)
 
+DOCKER_FOLDER := pdemeulenaer
+
 
 # 0. General local commands
 
@@ -59,6 +61,16 @@ run:
 	@docker run -d -p 8000:8000 --name $(IMAGE_NAME) $(IMAGE_NAME):$(VERSION)
 	@echo "Running image: $(IMAGE_NAME):$(VERSION)"
 	@echo "Access the app at http://localhost:8000"
+
+tag:
+	@echo "Tag image version: $(VERSION)"
+	@docker tag $(IMAGE_NAME):$(VERSION) $(DOCKER_FOLDER)/$(IMAGE_NAME):$(VERSION)
+	@echo "Tagged image: $(DOCKER_FOLDER)/$(IMAGE_NAME):$(VERSION)"
+
+push:
+	@echo "Pushing image version: $(VERSION)"
+	@docker push $(DOCKER_FOLDER)/$(IMAGE_NAME):$(VERSION)
+	@echo "Pushed image: $(DOCKER_FOLDER)/$(IMAGE_NAME):$(VERSION)"		
 
 # to run the fastapi app locally
 serve:
