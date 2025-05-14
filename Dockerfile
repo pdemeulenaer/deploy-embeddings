@@ -69,7 +69,9 @@ ENV PYTHONPATH=/app/src
 EXPOSE 8000
 
 # Run FastAPI app via uvicorn
-CMD ["uvicorn", "deploy_embeddings.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--no-access-log"]
+# CMD ["uvicorn", "deploy_embeddings.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--no-access-log"]
+CMD ["sh", "-c", "uvicorn deploy_embeddings.app:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --no-access-log"]
+# CMD ["sh", "-c", "uvicorn deploy_embeddings.app:app --host 0.0.0.0 --port $PORT --workers 1 --no-access-log"]
 
 
 
