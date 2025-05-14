@@ -1,7 +1,10 @@
 # deploy-embedding
-This repo is meant to deploy lightweighted embedding models as docker containers
 
-Here the app is served locally (for testing outside Docker) using `make serve` 
+This repo is meant to deploy lightweighted embedding models (like the sentence-transformers/all-MiniLM-L6-v2) as docker containers.
+
+The application avoids the use of sentence-transformers package to be lightweighted.
+
+**Local testing**: the app is served locally (for testing outside Docker) using `make serve`.
 
 **Docker image**: to create & run it:
 
