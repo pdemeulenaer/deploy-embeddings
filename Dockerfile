@@ -11,25 +11,30 @@ WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    git \
+    # build-essential \
+    # git \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Poetry
 RUN pip install --no-cache-dir poetry==2.1.2
 
-# Copy pyproject and lock files
+# Add PyTorch CPU-only index and optimize Poetry config
+RUN poetry config repositories.pytorch-cpu https://download.pytorch.org/whl/cpu && \
+    poetry config installer.parallel false && \
+    poetry config virtualenvs.create false
+
+# Copy pyproject and lock file
 COPY pyproject.toml poetry.lock* /app/
 
-# Use CPU-only PyTorch wheel index
-RUN poetry config repositories.pytorch-cpu https://download.pytorch.org/whl/cpu
-RUN poetry config installer.parallel false  # optional for deterministic builds
+# Install project dependencies (main only, no dev)
+RUN poetry install --only main --no-root --no-interaction --no-ansi && \
+    rm -rf /root/.cache /root/.cache/pip ~/.cache
 
-# Disable venv creation and install main dependencies only
-RUN poetry config virtualenvs.create false && \
-    poetry install --only main --no-root --no-interaction --no-ansi && \
-    rm -rf /root/.cache
+# 🔥 REMOVE unused files to slim the image
+RUN find /usr/local/lib/python3.11/site-packages -type d -name '__pycache__' -exec rm -rf {} + && \
+    find /usr/local/lib/python3.11/site-packages -type d -name 'tests' -exec rm -rf {} + && \
+    find /usr/local/lib/python3.11/site-packages -name '*.dist-info' -exec rm -rf {} +
 
 # # Preload model to cache it during build
 # RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
@@ -58,7 +63,7 @@ COPY src/deploy_embeddings/app.py /app/src/deploy_embeddings/
 # Set PYTHONPATH to include src directory
 ENV PYTHONPATH=/app/src
 
-# Expose port
+# Expose FastAPI port
 EXPOSE 8000
 
 # Run FastAPI app via uvicorn
