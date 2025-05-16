@@ -17,31 +17,8 @@ env-file:
 	cp .env.sample .env
 
 install:
-#	pip install -r requirements.txt
-#	pip install -e .
 	poetry install
 	poetry lock
-
-# pre-commit:
-# 	pre-commit install
-
-# black:
-# 	black .
-
-# lint:
-# 	mypy src
-# 	pylint src
-
-# test:
-# 	behave tests/features/
-
-# doc: 
-# 	mkdocs build	
-
-# quality: black lint test
-
-# quality-ci: lint test
-
 
 .PHONY: build run
 
