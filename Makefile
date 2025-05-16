@@ -16,10 +16,6 @@ DOCKER_FOLDER := pdemeulenaer
 env-file:
 	cp .env.sample .env
 
-# conda:
-# 	conda env create --file environment.yml --yes
-# 	$(CONDA_ACTIVATE) databricks-llm-fine-tuning-demo
-
 install:
 #	pip install -r requirements.txt
 #	pip install -e .
@@ -29,24 +25,22 @@ install:
 # pre-commit:
 # 	pre-commit install
 
-# setup: env-file conda pre-commit
+# black:
+# 	black .
 
-black:
-	black .
+# lint:
+# 	mypy src
+# 	pylint src
 
-lint:
-	mypy src
-	pylint src
+# test:
+# 	behave tests/features/
 
-test:
-	behave tests/features/
+# doc: 
+# 	mkdocs build	
 
-doc: 
-	mkdocs build	
+# quality: black lint test
 
-quality: black lint test
-
-quality-ci: lint test
+# quality-ci: lint test
 
 
 .PHONY: build run
@@ -74,14 +68,12 @@ push:
 
 # to run the fastapi app locally
 serve:
-	poetry run uvicorn deploy_embeddings.app:app --host 0.0.0.0 --port 8000 --reload
-
-ingest:
-	poetry run python -m src.app_rag_db.ingest_to_qdrant	
+	poetry run uvicorn deploy_embeddings.app:app --host 0.0.0.0 --port 8000 --reload	
 
 health:
 	curl http://localhost:8000/health
 
+# to test the fastapi app locally
 test:
 	curl -X POST http://localhost:8000/embed -H "Content-Type: application/json" -d '{"text": "This is a test sentence."}'
 

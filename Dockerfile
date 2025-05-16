@@ -61,7 +61,6 @@ COPY --from=builder /usr/local/bin/uvicorn /usr/local/bin/uvicorn
 # COPY src/deploy_embeddings/app.py /app/src/deploy_embeddings/
 COPY src /app/src
 
-
 # Set PYTHONPATH to include src directory
 ENV PYTHONPATH=/app/src
 
