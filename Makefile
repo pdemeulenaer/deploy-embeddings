@@ -7,21 +7,31 @@ IMAGE_NAME := deploy-embeddings
 
 # Read version from version.txt
 VERSION := $(shell cat version.txt)
-
 DOCKER_FOLDER := pdemeulenaer
 
+.PHONY: build run tag push
 
 # 0. General local commands
-
-env-file:
-	cp .env.sample .env
-
 install:
 	poetry install
 	poetry lock
 
-.PHONY: build run
 
+# 1. To run the fastapi app locally & test it
+serve:
+	poetry run uvicorn deploy_embeddings.app:app --host 0.0.0.0 --port 8000 --reload	
+
+health:
+	curl http://localhost:8000/health
+
+test:
+	curl -X POST http://localhost:8000/embed -H "Content-Type: application/json" -d '{"text": "This is a test sentence."}'
+
+test_big:
+	curl -X POST http://localhost:8000/embed -H "Content-Type: application/json" -d '{"text": "This is a test sentence that is really really long. Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet"}'
+
+
+# 2. Docker commands
 build:
 	@echo "Building image version: $(VERSION)"
 	@docker build -t $(IMAGE_NAME):$(VERSION) .
@@ -43,20 +53,8 @@ push:
 	@docker push $(DOCKER_FOLDER)/$(IMAGE_NAME):$(VERSION)
 	@echo "Pushed image: $(DOCKER_FOLDER)/$(IMAGE_NAME):$(VERSION)"		
 
-# to run the fastapi app locally
-serve:
-	poetry run uvicorn deploy_embeddings.app:app --host 0.0.0.0 --port 8000 --reload	
 
-health:
-	curl http://localhost:8000/health
-
-# to test the fastapi app locally
-test:
-	curl -X POST http://localhost:8000/embed -H "Content-Type: application/json" -d '{"text": "This is a test sentence."}'
-
-test_big:
-	curl -X POST http://localhost:8000/embed -H "Content-Type: application/json" -d '{"text": "This is a test sentence that is really really long. Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet"}'
-
+# 3. To test the deployed fastapi app in Azure
 test_azure:
 	curl -X POST https://rag-gbdgccage7bkgwa8.northeurope-01.azurewebsites.net/embed -H "Content-Type: application/json" -d '{"text": "This is a test sentence."}'
 
