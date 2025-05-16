@@ -59,20 +59,9 @@ COPY --from=builder /usr/local/bin/uvicorn /usr/local/bin/uvicorn
 COPY --from=builder /root/.cache/huggingface /app/.cache/huggingface
 
 RUN chown -R appuser:app /app/.cache && \
-    rm -rf /root/.cache/huggingface
-    
-
-RUN rm -rf /app/.cache/huggingface/hub/tmp* \
-    && rm -rf /app/.cache/huggingface/hub/models--*/*/snapshots/*/refs \
-    && rm -rf /app/.cache/huggingface/hub/models--*/*/snapshots/*/.git \
-    && rm -rf /app/.cache/huggingface/hub/models--*/*/snapshots/*/*.msgpack \
-    && rm -rf /app/.cache/huggingface/hub/models--*/*/snapshots/*/*.json \
-    && rm -rf /app/.cache/huggingface/hub/models--*/*/snapshots/*/*.h5 \
-    && find /app/.cache/huggingface -type f -name "*.bin" -delete \
-    && find /app/.cache/huggingface -type f -name "*.safetensors" ! -name "*L6-v2*" -delete    
+    rm -rf /root/.cache/huggingface  
 
 # Copy your app code
-# COPY src/deploy_embeddings/app.py /app/src/deploy_embeddings/
 COPY src /app/src
 
 # Set Python-related secure defaults
