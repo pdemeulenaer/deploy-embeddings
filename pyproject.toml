@@ -16,10 +16,10 @@ torch = { version = "2.2.2", source = "pytorch-cpu" }
 # sentence-transformers = { version = "3.0.1", extras = ["torch"], optional = false }
 # transformers = "^4.51.3"
 transformers = { version = "^4.51.3", extras = [] }
-# numpy = ">=1.26.2,<2.0.0"
+numpy = ">=1.26.2,<2.0.0"
+# numpy = ">=2.0.0,<3.0.0"
 fastapi = "^0.115.0"
 uvicorn = "^0.30.0"
-
 
 [[tool.poetry.source]]
 name = "pytorch-cpu"

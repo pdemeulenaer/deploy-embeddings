@@ -9,10 +9,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
-
 # Install Poetry
 RUN pip install --no-cache-dir poetry==2.1.2
 
@@ -34,14 +30,17 @@ RUN find /usr/local/lib/python3.11/site-packages -type d -name '__pycache__' -ex
     find /usr/local -type f -name '*.pyo' -delete && \
     find /usr/local -type f -name '*.so' -exec strip --strip-unneeded {} + || true    
 
-# # Preload model to cache it during build if needed
-# # RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
-# RUN python -c "from transformers import AutoTokenizer, AutoModel; AutoTokenizer.from_pretrained('sentence-transformers/all-MiniLM-L6-v2'); AutoModel.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')"
+# Preload model to cache it during build if needed
+# RUN python -c "from transformers import AutoTokenizer, AutoModel; AutoTokenizer.from_pretrained('sentence-transformers/all-MiniLM-L6-v2'); AutoModel.from_pretrained('sentence-transformers/all-MiniLM-L6-v2', local_files_only=True)"
+RUN python -c "from transformers import AutoTokenizer, AutoModel; AutoTokenizer.from_pretrained('sentence-transformers/all-MiniLM-L6-v2'); AutoModel.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')"
 
 # ===========================
 #  📦 Stage 2: Final Runtime
 # ===========================
 FROM python:3.11-slim
+
+# Add non-root user
+RUN addgroup --system app && adduser --system --ingroup app appuser
 
 # Set working directory
 WORKDIR /app
@@ -55,14 +54,36 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy installed packages from builder
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin/uvicorn /usr/local/bin/uvicorn
-# COPY --from=builder /root/.cache/huggingface /root/.cache/huggingface # if need to have model cached in the image
+
+# Copy Hugging Face model cache and set correct permissions
+COPY --from=builder /root/.cache/huggingface /app/.cache/huggingface
+
+RUN chown -R appuser:app /app/.cache && \
+    rm -rf /root/.cache/huggingface
+    
+
+RUN rm -rf /app/.cache/huggingface/hub/tmp* \
+    && rm -rf /app/.cache/huggingface/hub/models--*/*/snapshots/*/refs \
+    && rm -rf /app/.cache/huggingface/hub/models--*/*/snapshots/*/.git \
+    && rm -rf /app/.cache/huggingface/hub/models--*/*/snapshots/*/*.msgpack \
+    && rm -rf /app/.cache/huggingface/hub/models--*/*/snapshots/*/*.json \
+    && rm -rf /app/.cache/huggingface/hub/models--*/*/snapshots/*/*.h5 \
+    && find /app/.cache/huggingface -type f -name "*.bin" -delete \
+    && find /app/.cache/huggingface -type f -name "*.safetensors" ! -name "*L6-v2*" -delete    
 
 # Copy your app code
 # COPY src/deploy_embeddings/app.py /app/src/deploy_embeddings/
 COPY src /app/src
 
-# Set PYTHONPATH to include src directory
-ENV PYTHONPATH=/app/src
+# Set Python-related secure defaults
+ENV PYTHONPATH=/app/src \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONFAULTHANDLER=1 \
+    PYTHONHASHSEED=random \
+    HF_HOME=/app/.cache/huggingface
+
+# Change to non-root user
+USER appuser
 
 # Expose FastAPI port
 EXPOSE 8000
