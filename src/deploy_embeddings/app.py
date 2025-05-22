@@ -2,7 +2,7 @@ from transformers import AutoTokenizer, AutoModel
 import torch
 from fastapi import FastAPI
 from pydantic import BaseModel
-# import os
+
 
 app = FastAPI()
 
@@ -12,12 +12,6 @@ MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 # Load model
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 model = AutoModel.from_pretrained(MODEL_NAME)
-
-# # MODEL_PATH = "/app/model/all-MiniLM-L6-v2/sentence-transformers--all-MiniLM-L6-v2"
-# MODEL_ROOT = "/app/model/all-MiniLM-L6-v2"
-# MODEL_SUBDIR = [f.path for f in os.scandir(MODEL_ROOT) if f.is_dir()][0]
-# tokenizer = AutoTokenizer.from_pretrained(MODEL_SUBDIR, local_files_only=True)
-# model = AutoModel.from_pretrained(MODEL_SUBDIR, local_files_only=True)
 
 class TextInput(BaseModel):
     text: str
